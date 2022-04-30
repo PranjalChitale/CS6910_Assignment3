@@ -3,9 +3,6 @@ import tensorflow as tf
 import pandas as pd
 
 def load_data(path):
-    '''
-    Loads the data from csv file to dataframe.
-    '''
     with open(path) as f:
         data = pd.read_csv(f, sep='\t',header=None,names=["indic","english",""],skip_blank_lines=True,index_col=None)
     data = data[data['indic'].notna()]
@@ -14,9 +11,6 @@ def load_data(path):
     return data
 
 def preprocess(train_path, dev_path, test_path, batch_size):
-    '''
-    Preprocesses the data to convert it into the form desired for training RNN model.
-    '''
 
     train_df = load_data(train_path)
     val_df = load_data(dev_path)
@@ -109,7 +103,23 @@ def preprocess(train_path, dev_path, test_path, batch_size):
     encoder_test_english = np.zeros(
         (len(test_english), max_seq_len_english_encoder), dtype="float32"
     )
+    decoder_test_english = np.zeros(
+        (len(test_english), max_seq_len_indic_decoder), dtype="float32"
+    )
+    decoder_test_indic = np.zeros(
+        (len(test_english), max_seq_len_indic_decoder, len(indic_char_set)), dtype="float32"
+    )
 
+    print(encoder_train_english.shape, "ENC Train Eng")
+    print(decoder_train_english.shape, "DEC Train Eng")
+    print(decoder_train_indic.shape, "DEC Train Indic")
+    print(encoder_val_english.shape, "ENC Val Eng")
+    print(decoder_val_english.shape, "DEC Val Eng")
+    print(decoder_val_indic.shape, "DEC Val Eng")
+    print(encoder_test_english.shape, "ENC Test Eng")
+    print(decoder_test_english.shape, "DEC Test Eng")
+    print(decoder_test_indic.shape, "DEC Test Eng")
+  
 
     for i, (input_word, target_word) in enumerate(zip(train_english, train_indic)):
         for t, char in enumerate(input_word):
@@ -132,22 +142,36 @@ def preprocess(train_path, dev_path, test_path, batch_size):
         for t, char in enumerate(input_word):
             #Replace character by its index.
             encoder_val_english[i, t] = english_char_to_idx[char]
+        #Padding with zeros.
         encoder_val_english[i, t + 1 :] = english_char_to_idx[' ']
         
         for t, char in enumerate(target_word):
-            decoder_val_indic[i, t] = indic_char_to_idx[char]
+            decoder_val_english[i, t] = indic_char_to_idx[char]
             if t > 0:
-                decoder_val_indic[i, t - 1 :, indic_char_to_idx[char]-1] = 1.0
-        decoder_val_indic[i, t + 1 :] =  indic_char_to_idx[' ']
+                # Indic decoder will be ahead by one timestep.
+                decoder_val_indic[i, t - 1, indic_char_to_idx[char]-1] = 1.0
+        #Padding with zeros.
+        decoder_val_english[i, t + 1 :] = indic_char_to_idx[' ']
         decoder_val_indic[i, t :, indic_char_to_idx[' ']-1] = 1.0
 
-    for i, input_word in enumerate(test_english):
+    for i, (input_word, target_word) in enumerate(zip(test_english, test_indic)):
         for t, char in enumerate(input_word):
+            #Replace character by its index.
             encoder_test_english[i, t] = english_char_to_idx[char]
+        #Padding with zeros.
         encoder_test_english[i, t + 1 :] = english_char_to_idx[' ']
+        
+        for t, char in enumerate(target_word):
+            decoder_test_english[i, t] = indic_char_to_idx[char]
+            if t > 0:
+                # Indic decoder will be ahead by one timestep.
+                decoder_test_indic[i, t - 1, indic_char_to_idx[char]-1] = 1.0
+        #Padding with zeros.
+        decoder_test_english[i, t + 1 :] = indic_char_to_idx[' ']
+        decoder_test_indic[i, t :, indic_char_to_idx[' ']-1] = 1.0
 
 
-    return (encoder_train_english, decoder_train_english, decoder_train_indic), (encoder_val_english, decoder_val_english, decoder_val_indic), (val_english, val_indic), (encoder_test_english, test_english, test_indic), (english_char_set, indic_char_set, max_seq_len_english_encoder, max_seq_len_indic_decoder), (indic_char_to_idx, indic_idx_to_char)  
+    return (encoder_train_english, decoder_train_english, decoder_train_indic), (encoder_val_english, decoder_val_english, decoder_val_indic), (val_english, val_indic), (encoder_test_english, decoder_test_english, decoder_test_indic), (english_char_set, indic_char_set, max_seq_len_english_encoder, max_seq_len_indic_decoder), (indic_char_to_idx, indic_idx_to_char)  
     
 
 #Reference : Keras Documentation.
