@@ -57,18 +57,18 @@ def preprocess(train_path, dev_path, test_path, batch_size):
     english_idx_to_char = dict()
     indic_idx_to_char = dict()
 
-    #As our character sets don't consider spaces, we assign a special id 0 to space.
-    # We will zero-pad the strings to make them of equal length, to support batchwise training.
+    #As our character sets don't consider spaces, we assign a special id -1 to space.
+    # We will pad the strings with spaces to make them of equal length, to support batchwise training.
 
-    english_char_to_idx[" "] = 0
-    indic_char_to_idx[" "] = 0
+    english_char_to_idx[" "] = -1
+    indic_char_to_idx[" "] = -1
 
     #Create a mapping of characters to indices    
     for i, char in enumerate(english_char_set):
-        english_char_to_idx[char] = i+1
+        english_char_to_idx[char] = i
 
     for i, char in enumerate(indic_char_set):
-        indic_char_to_idx[char] = i+1
+        indic_char_to_idx[char] = i
 
 
     #Create a mapping of indices to characters.
@@ -132,10 +132,10 @@ def preprocess(train_path, dev_path, test_path, batch_size):
             decoder_train_english[i, t] = indic_char_to_idx[char]
             if t > 0:
                 # Indic decoder will be ahead by one timestep.
-                decoder_train_indic[i, t - 1, indic_char_to_idx[char]-1] = 1.0
-        #Padding with zeros.
+                decoder_train_indic[i, t - 1, indic_char_to_idx[char]] = 1.0
+        #Padding with spaces.
         decoder_train_english[i, t + 1 :] = indic_char_to_idx[' ']
-        decoder_train_indic[i, t :, indic_char_to_idx[' ']-1] = 1.0
+        decoder_train_indic[i, t :, indic_char_to_idx[' ']] = 1.0
 
 
     for i, (input_word, target_word) in enumerate(zip(val_english, val_indic)):
@@ -149,29 +149,29 @@ def preprocess(train_path, dev_path, test_path, batch_size):
             decoder_val_english[i, t] = indic_char_to_idx[char]
             if t > 0:
                 # Indic decoder will be ahead by one timestep.
-                decoder_val_indic[i, t - 1, indic_char_to_idx[char]-1] = 1.0
-        #Padding with zeros.
+                decoder_val_indic[i, t - 1, indic_char_to_idx[char]] = 1.0
+        #Padding with spaces.
         decoder_val_english[i, t + 1 :] = indic_char_to_idx[' ']
-        decoder_val_indic[i, t :, indic_char_to_idx[' ']-1] = 1.0
+        decoder_val_indic[i, t :, indic_char_to_idx[' ']] = 1.0
 
     for i, (input_word, target_word) in enumerate(zip(test_english, test_indic)):
         for t, char in enumerate(input_word):
             #Replace character by its index.
             encoder_test_english[i, t] = english_char_to_idx[char]
-        #Padding with zeros.
+        #Padding with spaces.
         encoder_test_english[i, t + 1 :] = english_char_to_idx[' ']
         
         for t, char in enumerate(target_word):
             decoder_test_english[i, t] = indic_char_to_idx[char]
             if t > 0:
                 # Indic decoder will be ahead by one timestep.
-                decoder_test_indic[i, t - 1, indic_char_to_idx[char]-1] = 1.0
-        #Padding with zeros.
+                decoder_test_indic[i, t - 1, indic_char_to_idx[char]] = 1.0
+        #Padding with spaces.
         decoder_test_english[i, t + 1 :] = indic_char_to_idx[' ']
-        decoder_test_indic[i, t :, indic_char_to_idx[' ']-1] = 1.0
+        decoder_test_indic[i, t :, indic_char_to_idx[' ']] = 1.0
 
 
-    return (encoder_train_english, decoder_train_english, decoder_train_indic), (encoder_val_english, decoder_val_english, decoder_val_indic), (val_english, val_indic), (encoder_test_english, decoder_test_english, decoder_test_indic), (english_char_set, indic_char_set, max_seq_len_english_encoder, max_seq_len_indic_decoder), (indic_char_to_idx, indic_idx_to_char)  
+    return (encoder_train_english, decoder_train_english, decoder_train_indic), (encoder_val_english, decoder_val_english, decoder_val_indic), (val_english, val_indic), (encoder_test_english, decoder_test_english, decoder_test_indic), (english_char_set, indic_char_set, max_seq_len_english_encoder, max_seq_len_indic_decoder), (indic_char_to_idx, indic_idx_to_char), (english_char_to_idx, english_idx_to_char)
     
 
 #Reference : Keras Documentation.
