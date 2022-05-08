@@ -16,13 +16,13 @@ def preprocess(train_path, dev_path, test_path, batch_size):
     val_df = load_data(dev_path)
     test_df = load_data(test_path)
 
-
     train_df['indic'] = train_df['indic'].str.replace(" ","")
     train_df['english'] = train_df['english'].str.replace(" ","")
     val_df['indic'] = val_df['indic'].str.replace(" ","")
     val_df['english'] = val_df['english'].str.replace(" ","")
     test_df['indic'] = test_df['indic'].str.replace(" ","")
     test_df['english'] = test_df['english'].str.replace(" ","")
+
 
     train_indic = train_df['indic'].values
     train_english = train_df['english'].values
