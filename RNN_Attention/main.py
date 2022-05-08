@@ -46,13 +46,34 @@ test_df = load_data(test_path)
 test_indic = test_df['indic'].values
 ctr = 0
 
-'''
+test_df = load_data(test_path)
+test_indic = test_df['indic'].values
+test_eng = test_df['english'].values
+
+ctr = 0
+
+true = []
+pred = []
+eng = []
 
 for i in range(len(test_indic)):
     input_seq = encoder_test_english[i:i+1]
     output, attn_weights = rnn_model.decode_sequence(input_seq)
+    print(i, ctr)
     if test_indic[i].strip() == output.strip():
         ctr+=1
+    eng.append(test_eng.strip())
+    true.append(test_indic[i].strip())
+    pred.append(output.strip())
+    
+
+
 print(ctr/len(test_indic))
-'''
+
+dic_prd = {'English':eng, 'true_indic':true, 'pred_indic':pred}
+
+df = pd.DataFrame(dic_prd) 
+    
+# saving the dataframe 
+df.to_csv('Predictions_Attention.csv') 
 
