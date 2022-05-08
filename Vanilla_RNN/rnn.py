@@ -38,19 +38,19 @@ class Model(object):
         for j in range(self.num_enc_layers):
             if self.cell == "rnn":
                 encoder_outputs, state = SimpleRNN(self.num_hidden_layers, dropout = self.dropout, return_state = True, return_sequences = True)(encoder_outputs)
-                encoder_states = [state]
+                encoder_states += [state]
             if self.cell == "lstm":
                 encoder_outputs, state_h, state_c = LSTM(self.num_hidden_layers, dropout = self.dropout, return_state = True, return_sequences = True)(encoder_outputs)
-                encoder_states = [state_h,state_c]
+                encoder_states += [state_h,state_c]
             if self.cell == "gru":
                 encoder_outputs, state = GRU(self.num_hidden_layers, dropout = self.dropout, return_state = True, return_sequences = True)(encoder_outputs)
-                encoder_states = [state]
+                encoder_states += [state]
 
         self.encoder_model = keras.Model(encoder_inputs,encoder_states)
 
-        decoder_inputs = keras.Input(shape=(None, ))
+        decoder_inputs = Input(shape=(None, ))
       
-        decoder_outputs = keras.layers.Embedding(input_dim = self.len_dec_charset + 1, output_dim = self.embedding_size, input_length = self.max_seq_len_indic_decoder)(decoder_inputs)
+        decoder_outputs = Embedding(input_dim = self.len_dec_charset + 1, output_dim = self.embedding_size, input_length = self.max_seq_len_indic_decoder)(decoder_inputs)
         decoder_states = list()
 
         for j in range(self.num_dec_layers):
